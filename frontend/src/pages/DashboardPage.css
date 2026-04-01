@@ -1,0 +1,99 @@
+/* ===== Dashboard Page ===== */
+
+.chart-card {
+  padding: 28px;
+}
+
+.chart-card__title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  margin-bottom: 20px;
+  color: var(--text-primary);
+}
+
+/* Recent Transactions */
+.recent-card {
+  padding: 28px;
+}
+
+.recent-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.recent-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border-subtle);
+  transition: background var(--transition-fast);
+}
+
+.recent-item:last-child {
+  border-bottom: none;
+}
+
+.recent-item:hover {
+  background: rgba(255, 255, 255, 0.02);
+  margin: 0 -12px;
+  padding-left: 12px;
+  padding-right: 12px;
+  border-radius: var(--radius-sm);
+}
+
+.recent-item__left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.recent-item__icon {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+}
+
+.recent-item__icon.icon-income {
+  background: var(--color-income-bg);
+  color: var(--color-income);
+}
+
+.recent-item__icon.icon-expense {
+  background: var(--color-expense-bg);
+  color: var(--color-expense);
+}
+
+.recent-item__category {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.recent-item__date {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+  max-width: 240px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.recent-item__amount {
+  font-size: 0.9rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+.amount-income {
+  color: var(--color-income);
+}
+
+.amount-expense {
+  color: var(--color-expense);
+}

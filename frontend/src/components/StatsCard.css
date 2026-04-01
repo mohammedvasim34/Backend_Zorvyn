@@ -1,0 +1,89 @@
+.stats-card {
+  padding: 24px;
+  position: relative;
+  overflow: hidden;
+}
+
+.stats-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.stats-card__title {
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+}
+
+.stats-card__icon {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
+}
+
+.stats-card__icon--income {
+  background: var(--color-income-bg);
+  color: var(--color-income);
+  border: 1px solid var(--color-income-border);
+}
+
+.stats-card__icon--expense {
+  background: var(--color-expense-bg);
+  color: var(--color-expense);
+  border: 1px solid var(--color-expense-border);
+}
+
+.stats-card__icon--balance {
+  background: var(--color-balance-bg);
+  color: var(--color-balance);
+  border: 1px solid var(--color-balance-border);
+}
+
+.stats-card__value {
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  margin-bottom: 8px;
+}
+
+.stats-card--income .stats-card__value {
+  color: var(--color-income);
+}
+
+.stats-card--expense .stats-card__value {
+  color: var(--color-expense);
+}
+
+.stats-card--balance .stats-card__value {
+  color: var(--color-balance);
+}
+
+/* Bottom accent bar */
+.stats-card__bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  opacity: 0.6;
+}
+
+.stats-card__bar--income {
+  background: linear-gradient(90deg, var(--color-income) 0%, transparent 100%);
+}
+
+.stats-card__bar--expense {
+  background: linear-gradient(90deg, var(--color-expense) 0%, transparent 100%);
+}
+
+.stats-card__bar--balance {
+  background: linear-gradient(90deg, var(--color-balance) 0%, transparent 100%);
+}
