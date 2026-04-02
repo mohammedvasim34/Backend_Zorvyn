@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-const API_BASE_URL = '/api'
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api'
 
 const client = axios.create({
   baseURL: API_BASE_URL,
@@ -92,7 +92,7 @@ export function getApiErrorMessage(error, fallback = 'Request failed') {
     if (first?.msg) return first.msg
   }
   if (error?.message === 'Network Error') {
-    return 'Cannot reach API server. Ensure backend is running on :8000 and frontend is using the correct API URL/proxy (CORS or origin mismatch can also cause this).'
+    return 'Cannot reach API server. Ensure backend is running and frontend is using the correct API URL/proxy (CORS or origin mismatch can also cause this).'
   }
   return fallback
 }
