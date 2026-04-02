@@ -51,3 +51,30 @@ class DashboardSummary(BaseModel):
     net_balance: float
     category_totals: list[CategoryTotal]
     recent_transactions: list[RecordOut]
+
+
+class TrendRow(BaseModel):
+    month: dt_date
+    total_income: float
+    total_expense: float
+
+
+class CategoryBreakdownRow(BaseModel):
+    category: str
+    total_amount: float
+
+
+class TrendComparison(BaseModel):
+    current_month_expense: float
+    previous_month_expense: float
+    change_amount: float
+    change_percentage: float
+
+
+class DashboardInsights(BaseModel):
+    total_income: float
+    total_expense: float
+    net_balance: float
+    savings_percentage: float
+    trend_comparison: TrendComparison
+    anomalies: list[RecordOut]

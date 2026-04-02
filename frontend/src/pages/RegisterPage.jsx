@@ -2,11 +2,12 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { getApiErrorMessage } from '../api/client'
-import { UserPlus, Mail, Lock, TrendingUp } from 'lucide-react'
+import { UserPlus, User, Mail, Lock, TrendingUp } from 'lucide-react'
 import toast from 'react-hot-toast'
 import './AuthPages.css'
 
 export default function RegisterPage() {
+  const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -22,7 +23,7 @@ export default function RegisterPage() {
     }
     setLoading(true)
     try {
-      await register(email, password)
+      await register(email, password, name)
       toast.success('Account created successfully!')
       navigate('/')
     } catch (err) {
@@ -73,6 +74,23 @@ export default function RegisterPage() {
 
             <form onSubmit={handleSubmit} className="auth-form" id="register-form">
               <div className="input-group">
+                <label htmlFor="register-name">Full name</label>
+                <div className="input-with-icon">
+                  <User size={16} className="input-icon" />
+                  <input
+                    id="register-name"
+                    className="input-field"
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Your full name"
+                    maxLength={120}
+                    autoFocus
+                  />
+                </div>
+              </div>
+
+              <div className="input-group">
                 <label htmlFor="register-email">Email address</label>
                 <div className="input-with-icon">
                   <Mail size={16} className="input-icon" />
@@ -84,7 +102,6 @@ export default function RegisterPage() {
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="you@example.com"
                     required
-                    autoFocus
                   />
                 </div>
               </div>

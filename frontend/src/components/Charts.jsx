@@ -1,4 +1,4 @@
-import { Doughnut, Bar } from 'react-chartjs-2'
+import { Doughnut, Bar, Line } from 'react-chartjs-2'
 import {
   Chart as ChartJS,
   ArcElement,
@@ -7,9 +7,22 @@ import {
   CategoryScale,
   LinearScale,
   BarElement,
+  PointElement,
+  LineElement,
+  Filler,
 } from 'chart.js'
 
-ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement)
+ChartJS.register(
+  ArcElement,
+  Tooltip,
+  Legend,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  PointElement,
+  LineElement,
+  Filler
+)
 
 const CHART_COLORS = [
   '#6c5ce7',
@@ -142,6 +155,179 @@ export function IncomeExpenseBar({ totalIncome = 0, totalExpenses = 0 }) {
 
   return (
     <div style={{ height: '300px', position: 'relative' }}>
+      <Bar data={data} options={options} />
+    </div>
+  )
+}
+
+export function MonthlyTrendLine({ trends = [] }) {
+  if (!trends.length) {
+    return (
+      <div className="empty-state" style={{ padding: '40px 20px' }}>
+        <p>No monthly trend data yet</p>
+      </div>
+    )
+  }
+
+  const labels = trends.map((t) =>
+    new Date(t.month).toLocaleDateString('en-US', { month: 'short', year: '2-digit' })
+  )
+
+  const data = {
+    labels,
+    datasets: [
+      {
+        label: 'Income',
+        data: trends.map((t) => Number(t.total_income || 0)),
+        borderColor: '#00e09e',
+        backgroundColor: 'rgba(0, 224, 158, 0.12)',
+        pointBackgroundColor: '#00e09e',
+        tension: 0.35,
+        fill: true,
+      },
+      {
+        label: 'Expense',
+        data: trends.map((t) => Number(t.total_expense || 0)),
+        borderColor: '#ff6b8a',
+        backgroundColor: 'rgba(255, 107, 138, 0.12)',
+        pointBackgroundColor: '#ff6b8a',
+        tension: 0.35,
+        fill: true,
+      },
+    ],
+  }
+
+  const options = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        labels: {
+          color: '#8888aa',
+          font: { family: 'Inter', size: 12 },
+        },
+      },
+      tooltip: {
+        backgroundColor: 'rgba(14, 14, 35, 0.95)',
+      },
+    },
+    scales: {
+      x: {
+        ticks: { color: '#8888aa' },
+        grid: { color: 'rgba(255,255,255,0.03)' },
+      },
+      y: {
+        ticks: {
+          color: '#555570',
+          callback: (v) => `$${Number(v).toLocaleString()}`,
+        },
+        grid: { color: 'rgba(255,255,255,0.04)' },
+      },
+    },
+  }
+
+  return (
+    <div style={{ height: '300px', position: 'relative' }}>
+      <Line data={data} options={options} />
+    </div>
+  )
+}
+
+export function TopCategoriesBar({ categories = [] }) {
+  if (!categories.length) {
+    return (
+      <div className="empty-state" style={{ padding: '40px 20px' }}>
+        <p>No top categories yet</p>
+      </div>
+    )
+  }
+
+  const data = {
+    labels: categories.map((c) => c.category),
+    datasets: [
+      {
+        label: 'Total Expense',
+        data: categories.map((c) => Number(c.total_amount || 0)),
+        backgroundColor: categories.map((_, i) => CHART_COLORS[i % CHART_COLORS.length]),
+        borderRadius: 8,
+      },
+    ],
+  }
+
+  const options = {
+    indexAxis: 'y',
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+    },
+    scales: {
+      x: {
+        ticks: {
+          color: '#555570',
+          callback: (v) => `$${Number(v).toLocaleString()}`,
+        },
+        grid: { color: 'rgba(255,255,255,0.04)' },
+      },
+      y: {
+        ticks: { color: '#8888aa' },
+        grid: { display: false },
+      },
+    },
+  }
+
+  return (
+    <div style={{ height: '300px', position: 'relative' }}>
+      <Bar data={data} options={options} />
+    </div>
+  )
+}
+
+export function AnomalyBar({ anomalies = [] }) {
+  if (!anomalies.length) {
+    return (
+      <div className="empty-state" style={{ padding: '40px 20px' }}>
+        <p>No anomalies found</p>
+      </div>
+    )
+  }
+
+  const trimmed = anomalies.slice(0, 8)
+  const data = {
+    labels: trimmed.map((a) => new Date(a.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })),
+    datasets: [
+      {
+        label: 'Anomalous Expense',
+        data: trimmed.map((a) => Number(a.amount || 0)),
+        backgroundColor: 'rgba(255, 107, 138, 0.65)',
+        borderColor: '#ff6b8a',
+        borderWidth: 1,
+        borderRadius: 8,
+      },
+    ],
+  }
+
+  const options = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: {
+        ticks: { color: '#8888aa' },
+        grid: { display: false },
+      },
+      y: {
+        ticks: {
+          color: '#555570',
+          callback: (v) => `$${Number(v).toLocaleString()}`,
+        },
+        grid: { color: 'rgba(255,255,255,0.04)' },
+      },
+    },
+  }
+
+  return (
+    <div style={{ height: '280px', position: 'relative' }}>
       <Bar data={data} options={options} />
     </div>
   )

@@ -1,6 +1,6 @@
 import { Pencil, Trash2, FileText } from 'lucide-react'
 
-export default function RecordTable({ records = [], onEdit, onDelete, isAdmin = false }) {
+export default function RecordTable({ records = [], onEdit, onDelete, isAdmin = false, canManageRecords = false }) {
   if (!records.length) {
     return (
       <div className="empty-state">
@@ -20,7 +20,7 @@ export default function RecordTable({ records = [], onEdit, onDelete, isAdmin = 
             <th>Category</th>
             <th style={{ textAlign: 'right' }}>Amount</th>
             <th>Notes</th>
-            {isAdmin && <th style={{ textAlign: 'center' }}>Actions</th>}
+            {canManageRecords && <th style={{ textAlign: 'center' }}>Actions</th>}
           </tr>
         </thead>
         <tbody>
@@ -53,16 +53,18 @@ export default function RecordTable({ records = [], onEdit, onDelete, isAdmin = 
               <td style={{ maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {r.notes || '—'}
               </td>
-              {isAdmin && (
+              {canManageRecords && (
                 <td style={{ textAlign: 'center' }}>
                   <div style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
-                    <button
-                      className="btn btn-icon btn-secondary btn-sm"
-                      onClick={() => onEdit(r)}
-                      title="Edit"
-                    >
-                      <Pencil size={14} />
-                    </button>
+                    {isAdmin && (
+                      <button
+                        className="btn btn-icon btn-secondary btn-sm"
+                        onClick={() => onEdit(r)}
+                        title="Edit"
+                      >
+                        <Pencil size={14} />
+                      </button>
+                    )}
                     <button
                       className="btn btn-icon btn-danger btn-sm"
                       onClick={() => onDelete(r.id)}

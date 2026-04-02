@@ -1,6 +1,6 @@
 from datetime import date
 
-from sqlalchemy import func
+from sqlalchemy import func, text
 from sqlalchemy.orm import Query, Session
 
 from backend.models.record import Record, RecordType
@@ -12,6 +12,15 @@ from backend.utils.validators import normalize_category, sanitize_notes
 def _apply_record_scope(query: Query, current_user: User) -> Query:
     if current_user.role != UserRole.ADMIN:
         query = query.filter(Record.user_id == current_user.id)
+    return query
+
+
+def _apply_record_read_scope(query: Query, current_user: User) -> Query:
+    """Read scope for list/analytics pages.
+
+    Analysts and viewers should be able to see all records for analysis/visibility,
+    while mutating actions keep stricter ownership/admin checks.
+    """
     return query
 
 
@@ -63,7 +72,7 @@ def get_records(
     end_date: date | None,
 ) -> tuple[int, list[Record]]:
     base_query = db.query(Record)
-    base_query = _apply_record_scope(base_query, current_user)
+    base_query = _apply_record_read_scope(base_query, current_user)
     base_query = _apply_filters(base_query, record_type, category, exact_date, start_date, end_date)
 
     total = base_query.count()
@@ -104,7 +113,7 @@ def delete_record(db: Session, record: Record) -> None:
 
 
 def get_dashboard_summary(db: Session, current_user: User, recent_limit: int) -> DashboardSummary:
-    scoped_query = _apply_record_scope(db.query(Record), current_user)
+    scoped_query = _apply_record_read_scope(db.query(Record), current_user)
 
     total_income = (
         scoped_query.filter(Record.type == RecordType.INCOME)
@@ -140,3 +149,182 @@ def get_dashboard_summary(db: Session, current_user: User, recent_limit: int) ->
         ],
         recent_transactions=recent_transactions,
     )
+
+
+def _analytics_scope_where(current_user: User) -> tuple[str, dict]:
+    # Analyst dashboards should aggregate across the full dataset.
+    return "", {}
+
+
+def get_dashboard_trends(db: Session, current_user: User) -> list[dict]:
+    scope_where, params = _analytics_scope_where(current_user)
+    query = text(
+        f"""
+        SELECT
+            DATE_TRUNC('month', r.date)::date AS month,
+            COALESCE(SUM(CASE WHEN r.type = 'income' THEN r.amount ELSE 0 END), 0) AS total_income,
+            COALESCE(SUM(CASE WHEN r.type = 'expense' THEN r.amount ELSE 0 END), 0) AS total_expense
+        FROM records r
+        WHERE 1=1 {scope_where}
+        GROUP BY DATE_TRUNC('month', r.date)
+        ORDER BY DATE_TRUNC('month', r.date) ASC
+        """
+    )
+    rows = db.execute(query, params).mappings().all()
+    return [
+        {
+            "month": row["month"],
+            "total_income": float(row["total_income"] or 0),
+            "total_expense": float(row["total_expense"] or 0),
+        }
+        for row in rows
+    ]
+
+
+def get_dashboard_category_breakdown(db: Session, current_user: User) -> list[dict]:
+    scope_where, params = _analytics_scope_where(current_user)
+    query = text(
+        f"""
+        SELECT
+            r.category,
+            COALESCE(SUM(r.amount), 0) AS total_amount
+        FROM records r
+        WHERE r.type = 'expense' {scope_where}
+        GROUP BY r.category
+        ORDER BY total_amount DESC
+        """
+    )
+    rows = db.execute(query, params).mappings().all()
+    return [
+        {
+            "category": row["category"],
+            "total_amount": float(row["total_amount"] or 0),
+        }
+        for row in rows
+    ]
+
+
+def get_dashboard_top_categories(db: Session, current_user: User, limit: int = 5) -> list[dict]:
+    scope_where, params = _analytics_scope_where(current_user)
+    params["limit"] = limit
+    query = text(
+        f"""
+        SELECT
+            r.category,
+            COALESCE(SUM(r.amount), 0) AS total_amount
+        FROM records r
+        WHERE r.type = 'expense' {scope_where}
+        GROUP BY r.category
+        ORDER BY total_amount DESC
+        LIMIT :limit
+        """
+    )
+    rows = db.execute(query, params).mappings().all()
+    return [
+        {
+            "category": row["category"],
+            "total_amount": float(row["total_amount"] or 0),
+        }
+        for row in rows
+    ]
+
+
+def get_dashboard_recent_transactions(db: Session, current_user: User, limit: int = 10) -> list[Record]:
+    query = _apply_record_read_scope(db.query(Record), current_user)
+    return query.order_by(Record.date.desc(), Record.id.desc()).limit(limit).all()
+
+
+def get_dashboard_insights(db: Session, current_user: User) -> dict:
+    scope_where, params = _analytics_scope_where(current_user)
+
+    totals_query = text(
+        f"""
+        SELECT
+            COALESCE(SUM(CASE WHEN r.type = 'income' THEN r.amount ELSE 0 END), 0) AS total_income,
+            COALESCE(SUM(CASE WHEN r.type = 'expense' THEN r.amount ELSE 0 END), 0) AS total_expense
+        FROM records r
+        WHERE 1=1 {scope_where}
+        """
+    )
+    totals = db.execute(totals_query, params).mappings().first() or {}
+    total_income = float(totals.get("total_income") or 0)
+    total_expense = float(totals.get("total_expense") or 0)
+    net_balance = total_income - total_expense
+    savings_percentage = (net_balance / total_income * 100) if total_income > 0 else 0.0
+
+    trend_query = text(
+        f"""
+        SELECT
+            COALESCE(SUM(CASE
+                WHEN DATE_TRUNC('month', r.date) = DATE_TRUNC('month', CURRENT_DATE)
+                    AND r.type = 'expense'
+                THEN r.amount ELSE 0 END), 0) AS current_month_expense,
+            COALESCE(SUM(CASE
+                WHEN DATE_TRUNC('month', r.date) = DATE_TRUNC('month', CURRENT_DATE - INTERVAL '1 month')
+                    AND r.type = 'expense'
+                THEN r.amount ELSE 0 END), 0) AS previous_month_expense
+        FROM records r
+        WHERE 1=1 {scope_where}
+        """
+    )
+    trend = db.execute(trend_query, params).mappings().first() or {}
+    current_month_expense = float(trend.get("current_month_expense") or 0)
+    previous_month_expense = float(trend.get("previous_month_expense") or 0)
+    change_amount = current_month_expense - previous_month_expense
+    change_percentage = (
+        (change_amount / previous_month_expense * 100)
+        if previous_month_expense > 0
+        else (100.0 if current_month_expense > 0 else 0.0)
+    )
+
+    anomaly_params = {**params, "limit": 10}
+    anomaly_query = text(
+        f"""
+        WITH avg_expense AS (
+            SELECT COALESCE(AVG(r.amount), 0) AS avg_amount
+            FROM records r
+            WHERE r.type = 'expense' {scope_where}
+        )
+        SELECT
+            r.id,
+            r.user_id,
+            r.amount,
+            r.type,
+            r.category,
+            r.date,
+            r.notes
+        FROM records r, avg_expense ae
+        WHERE r.type = 'expense'
+          AND r.amount > 2 * ae.avg_amount
+          {scope_where}
+        ORDER BY r.date DESC, r.id DESC
+        LIMIT :limit
+        """
+    )
+    anomaly_rows = db.execute(anomaly_query, anomaly_params).mappings().all()
+    anomalies = [
+        {
+            "id": row["id"],
+            "user_id": row["user_id"],
+            "amount": float(row["amount"] or 0),
+            "type": row["type"],
+            "category": row["category"],
+            "date": row["date"],
+            "notes": row["notes"],
+        }
+        for row in anomaly_rows
+    ]
+
+    return {
+        "total_income": total_income,
+        "total_expense": total_expense,
+        "net_balance": net_balance,
+        "savings_percentage": savings_percentage,
+        "trend_comparison": {
+            "current_month_expense": current_month_expense,
+            "previous_month_expense": previous_month_expense,
+            "change_amount": change_amount,
+            "change_percentage": change_percentage,
+        },
+        "anomalies": anomalies,
+    }

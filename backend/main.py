@@ -1,6 +1,7 @@
 from pathlib import Path
 import sys
 import logging
+import os
 
 from dotenv import load_dotenv
 from fastapi import FastAPI
@@ -30,9 +31,14 @@ app = FastAPI(
     version="1.0.0",
 )
 
+cors_origins_env = os.getenv("CORS_ALLOW_ORIGINS", "")
+cors_origins = [origin.strip() for origin in cors_origins_env.split(",") if origin.strip()]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_origins=cors_origins or ["http://localhost:5173", "http://127.0.0.1:5173"],
+    # Accept localhost/127.0.0.1 on any port for local frontend dev servers.
+    allow_origin_regex=r"^https?://(localhost|127\.0\.0\.1)(:\d+)?$",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { recordsAPI } from '../api/client'
 import { useAuth } from '../context/AuthContext'
 import RecordTable from '../components/RecordTable'
@@ -7,18 +8,24 @@ import { Plus, Search } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 export default function RecordsPage() {
-  const { isAdmin } = useAuth()
+  const { user, isAdmin } = useAuth()
+  const normalizedRole = String(user?.role || '')
+    .toLowerCase()
+    .split('.')
+    .pop()
+  const canManageRecords = isAdmin || normalizedRole === 'viewer'
+  const [searchParams] = useSearchParams()
   const [records, setRecords] = useState([])
   const [loading, setLoading] = useState(true)
-  const [page, setPage] = useState(1)
+  const [page, setPage] = useState(Number(searchParams.get('page') || 1))
   const [total, setTotal] = useState(0)
   const pageSize = 10
 
   // Filters
-  const [filterType, setFilterType] = useState('')
-  const [filterCategory, setFilterCategory] = useState('')
-  const [filterStartDate, setFilterStartDate] = useState('')
-  const [filterEndDate, setFilterEndDate] = useState('')
+  const [filterType, setFilterType] = useState(searchParams.get('type') || '')
+  const [filterCategory, setFilterCategory] = useState(searchParams.get('category') || '')
+  const [filterStartDate, setFilterStartDate] = useState(searchParams.get('start_date') || '')
+  const [filterEndDate, setFilterEndDate] = useState(searchParams.get('end_date') || '')
 
   // Modal
   const [showForm, setShowForm] = useState(false)
@@ -101,7 +108,7 @@ export default function RecordsPage() {
           <h1>Records</h1>
           <p>{total} transaction{total !== 1 ? 's' : ''} found</p>
         </div>
-        {isAdmin && (
+        {canManageRecords && (
           <button
             className="btn btn-primary"
             onClick={() => setShowForm(true)}
@@ -179,6 +186,7 @@ export default function RecordsPage() {
             records={records}
             onEdit={handleEdit}
             onDelete={handleDelete}
+            canManageRecords={canManageRecords}
             isAdmin={isAdmin}
           />
         )}

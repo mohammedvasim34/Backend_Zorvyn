@@ -6,6 +6,7 @@ import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import DashboardPage from './pages/DashboardPage'
 import RecordsPage from './pages/RecordsPage'
+import AnalystPage from './pages/AnalystPage'
 import UsersPage from './pages/UsersPage'
 
 function AppLayout({ children }) {
@@ -57,6 +58,16 @@ export default function App() {
           <ProtectedRoute>
             <AppLayout>
               <RecordsPage />
+            </AppLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/analyst"
+        element={
+          <ProtectedRoute allowedRoles={['analyst', 'admin']}>
+            <AppLayout>
+              <AnalystPage />
             </AppLayout>
           </ProtectedRoute>
         }

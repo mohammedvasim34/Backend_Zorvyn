@@ -16,7 +16,13 @@ def register_user(payload: UserCreate, db: Session = Depends(get_db)):
     # Bootstrap rule: first registered user becomes admin; others default to viewer.
     existing_users = db.query(User).count()
     role = UserRole.ADMIN if existing_users == 0 else UserRole.VIEWER
-    user = create_user(db=db, email=payload.email, password=payload.password, role=role)
+    user = create_user(
+        db=db,
+        name=payload.name,
+        email=payload.email,
+        password=payload.password,
+        role=role,
+    )
     return user
 
 

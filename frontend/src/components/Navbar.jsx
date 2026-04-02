@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext'
 import {
   LayoutDashboard,
   Receipt,
+  LineChart,
   Users,
   LogOut,
   TrendingUp,
@@ -10,7 +11,7 @@ import {
 import './Navbar.css'
 
 export default function Navbar() {
-  const { user, logout, isAdmin } = useAuth()
+  const { user, logout, isAdmin, isAnalyst } = useAuth()
   const navigate = useNavigate()
 
   const handleLogout = () => {
@@ -51,6 +52,19 @@ export default function Navbar() {
             <Receipt size={18} />
             <span>Records</span>
           </NavLink>
+
+          {isAnalyst && (
+            <NavLink
+              to="/analyst"
+              className={({ isActive }) =>
+                `nav-link ${isActive ? 'active' : ''}`
+              }
+              id="nav-analyst"
+            >
+              <LineChart size={18} />
+              <span>Analyst</span>
+            </NavLink>
+          )}
 
           {isAdmin && (
             <NavLink

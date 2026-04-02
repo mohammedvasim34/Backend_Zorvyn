@@ -59,7 +59,13 @@ def get_user_by_identifier(db: Session, identifier: str) -> User | None:
     return get_user_by_email(db, normalized)
 
 
-def create_user(db: Session, email: str, password: str, role: UserRole = UserRole.VIEWER) -> User:
+def create_user(
+    db: Session,
+    email: str,
+    password: str,
+    role: UserRole = UserRole.VIEWER,
+    name: str | None = None,
+) -> User:
     existing_user = get_user_by_email(db, email)
     if existing_user:
         raise HTTPException(
@@ -68,6 +74,7 @@ def create_user(db: Session, email: str, password: str, role: UserRole = UserRol
         )
 
     user = User(
+        name=name.strip() if name else None,
         email=email.lower(),
         hashed_password=hash_password(password),
         role=role,

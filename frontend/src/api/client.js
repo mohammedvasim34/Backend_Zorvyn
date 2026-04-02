@@ -38,8 +38,8 @@ client.interceptors.response.use(
 
 // ---- Auth ----
 export const authAPI = {
-  register: (email, password) =>
-    client.post('/auth/register', { email, password }),
+  register: (email, password, name = null) =>
+    client.post('/auth/register', { name, email, password }),
   login: (identifier, password) => {
     const params = new URLSearchParams()
     params.append('username', identifier)
@@ -63,6 +63,11 @@ export const recordsAPI = {
 export const dashboardAPI = {
   summary: (recentLimit = 5) =>
     client.get('/dashboard/summary', { params: { recent_limit: recentLimit } }),
+  trends: () => client.get('/dashboard/trends'),
+  categoryBreakdown: () => client.get('/dashboard/category-breakdown'),
+  topCategories: () => client.get('/dashboard/top-categories'),
+  recent: () => client.get('/dashboard/recent'),
+  insights: () => client.get('/dashboard/insights'),
 }
 
 // ---- Users ----
@@ -87,7 +92,7 @@ export function getApiErrorMessage(error, fallback = 'Request failed') {
     if (first?.msg) return first.msg
   }
   if (error?.message === 'Network Error') {
-    return 'Cannot reach API server. Make sure backend is running on port 8000.'
+    return 'Cannot reach API server. Ensure backend is running on :8000 and frontend is using the correct API URL/proxy (CORS or origin mismatch can also cause this).'
   }
   return fallback
 }

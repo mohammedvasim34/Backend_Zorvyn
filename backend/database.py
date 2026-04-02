@@ -179,6 +179,9 @@ def migrate_legacy_users_schema() -> None:
         if "is_active" not in columns:
             conn.execute(text("ALTER TABLE users ADD COLUMN is_active BOOLEAN DEFAULT TRUE"))
 
+        if "name" not in columns:
+            conn.execute(text("ALTER TABLE users ADD COLUMN name VARCHAR(120)"))
+
         conn.execute(text("UPDATE users SET is_active = TRUE WHERE is_active IS NULL"))
 
     # Convert legacy plaintext passwords to bcrypt hashes.

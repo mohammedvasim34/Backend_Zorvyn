@@ -33,8 +33,8 @@ export function AuthProvider({ children }) {
     return meRes.data
   }
 
-  const register = async (email, password) => {
-    await authAPI.register(email, password)
+  const register = async (email, password, name) => {
+    await authAPI.register(email, password, name)
     // Auto-login after registration
     return login(email, password)
   }
@@ -44,8 +44,12 @@ export function AuthProvider({ children }) {
     setUser(null)
   }
 
-  const isAdmin = user?.role === 'admin'
-  const isAnalyst = user?.role === 'analyst' || isAdmin
+  const normalizedRole = String(user?.role || '')
+    .toLowerCase()
+    .split('.')
+    .pop()
+  const isAdmin = normalizedRole === 'admin'
+  const isAnalyst = normalizedRole === 'analyst' || isAdmin
 
   return (
     <AuthContext.Provider
