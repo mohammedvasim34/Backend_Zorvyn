@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-const API_BASE_URL = 'http://127.0.0.1:8000'
+const API_BASE_URL = '/api'
 
 const client = axios.create({
   baseURL: API_BASE_URL,
@@ -40,9 +40,9 @@ client.interceptors.response.use(
 export const authAPI = {
   register: (email, password) =>
     client.post('/auth/register', { email, password }),
-  login: (email, password) => {
+  login: (identifier, password) => {
     const params = new URLSearchParams()
-    params.append('username', email)
+    params.append('username', identifier)
     params.append('password', password)
     return client.post('/auth/login', params, {
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -77,3 +77,17 @@ export const usersAPI = {
 }
 
 export default client
+
+export function getApiErrorMessage(error, fallback = 'Request failed') {
+  const detail = error?.response?.data?.detail
+  if (typeof detail === 'string' && detail.trim()) return detail
+  if (Array.isArray(detail) && detail.length > 0) {
+    const first = detail[0]
+    if (typeof first === 'string') return first
+    if (first?.msg) return first.msg
+  }
+  if (error?.message === 'Network Error') {
+    return 'Cannot reach API server. Make sure backend is running on port 8000.'
+  }
+  return fallback
+}

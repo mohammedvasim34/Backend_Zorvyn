@@ -5,7 +5,7 @@ A clean, modular FastAPI backend for a Finance Dashboard application.
 ## Tech Stack
 
 - FastAPI
-- SQLite
+- PostgreSQL (with psycopg2 driver)
 - SQLAlchemy ORM
 - Pydantic validation
 - JWT authentication
@@ -38,33 +38,68 @@ backend/
 
 ## Setup Instructions
 
+### Prerequisites
+
+1. **PostgreSQL**: Install PostgreSQL 14+ from [postgresql.org](https://www.postgresql.org/download/)
+
+2. **Create Database** (Linux/Mac):
+```bash
+psql -U postgres
+CREATE DATABASE finance_dashboard;
+\q
+```
+
+Or on **Windows** (using pgAdmin or psql):
+```sql
+CREATE DATABASE finance_dashboard;
+```
+
+### Project Setup
+
 1. Create and activate a virtual environment:
 
-```powershell
+```bash
 cd backend
 python -m venv .venv
+
+# Linux/Mac
+source .venv/bin/activate
+
+# Windows
 .\.venv\Scripts\Activate.ps1
 ```
 
 2. Install dependencies:
 
-```powershell
+```bash
 pip install -r requirements.txt
 ```
 
-3. (Optional but recommended) Set JWT secret key:
+3. **Configure environment variables** - Copy `.env.example` to `.env` and update as needed:
 
-```powershell
-$env:JWT_SECRET_KEY="your-super-secret-key"
+```bash
+cp .env.example .env
 ```
 
-4. Start the API server:
+Edit `.env` with your Supabase PostgreSQL credentials:
+```
+DATABASE_URL=postgresql://postgres:YOUR_URL_ENCODED_PASSWORD@db.YOUR_PROJECT_REF.supabase.co:5432/postgres?sslmode=require
+JWT_SECRET_KEY=your-super-secret-key
+```
 
-```powershell
+4. Verify database connection by starting the API server:
+
+```bash
+uvicorn main:app --reload
+```
+
+If you start from the project root instead of `backend/`, use:
+
+```bash
 uvicorn backend.main:app --reload
 ```
 
-5. Open Swagger UI:
+5. The API will automatically create all tables on first run. Open Swagger UI:
 
 - http://127.0.0.1:8000/docs
 
@@ -132,7 +167,26 @@ curl "http://127.0.0.1:8000/dashboard/summary?recent_limit=5" \
 
 ## Notes
 
-- SQLite file (`finance_dashboard.db`) is created automatically on first run.
+- Supabase PostgreSQL tables are created automatically on first run via `Base.metadata.create_all()`.
 - First registered user is promoted to `admin` for bootstrap.
 - Subsequent registrations default to `viewer` for safety.
 - Use admin endpoints to promote users to `analyst` or `admin`.
+- Environment variables are loaded from `.env` file (see `.env.example` for reference).
+
+## Database Troubleshooting
+
+**Connection Error**: Ensure Supabase credentials in `.env` are correct:
+```bash
+psql "postgresql://postgres:YOUR_URL_ENCODED_PASSWORD@db.YOUR_PROJECT_REF.supabase.co:5432/postgres?sslmode=require"
+```
+
+**Pool Connection Issue**: Adjust `pool_size` in `database.py` if needed:
+```python
+engine = create_engine(
+    DATABASE_URL,
+    pool_pre_ping=True,
+    pool_size=10,  # Add this for production
+    max_overflow=20,
+    echo=False
+)
+```

@@ -25,7 +25,7 @@ def login(
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db),
 ):
-    user = authenticate_user(db=db, email=form_data.username, password=form_data.password)
+    user = authenticate_user(db=db, identifier=form_data.username, password=form_data.password)
     token = create_access_token(data={"sub": str(user.id)})
     return Token(access_token=token)
 

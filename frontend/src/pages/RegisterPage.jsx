@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { getApiErrorMessage } from '../api/client'
 import { UserPlus, Mail, Lock, TrendingUp } from 'lucide-react'
 import toast from 'react-hot-toast'
 import './AuthPages.css'
@@ -25,7 +26,7 @@ export default function RegisterPage() {
       toast.success('Account created successfully!')
       navigate('/')
     } catch (err) {
-      const msg = err.response?.data?.detail || 'Registration failed'
+      const msg = getApiErrorMessage(err, 'Registration failed')
       toast.error(msg)
     } finally {
       setLoading(false)

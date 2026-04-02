@@ -52,6 +52,13 @@ def get_user_by_email(db: Session, email: str) -> User | None:
     return db.query(User).filter(User.email == email.lower()).first()
 
 
+def get_user_by_identifier(db: Session, identifier: str) -> User | None:
+    normalized = identifier.strip()
+    if normalized.isdigit():
+        return db.query(User).filter(User.id == int(normalized)).first()
+    return get_user_by_email(db, normalized)
+
+
 def create_user(db: Session, email: str, password: str, role: UserRole = UserRole.VIEWER) -> User:
     existing_user = get_user_by_email(db, email)
     if existing_user:
@@ -72,12 +79,12 @@ def create_user(db: Session, email: str, password: str, role: UserRole = UserRol
     return user
 
 
-def authenticate_user(db: Session, email: str, password: str) -> User:
-    user = get_user_by_email(db, email)
+def authenticate_user(db: Session, identifier: str, password: str) -> User:
+    user = get_user_by_identifier(db, identifier)
     if not user or not verify_password(password, user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect email or password",
+            detail="Incorrect user ID/email or password",
         )
     if not user.is_active:
         raise HTTPException(

@@ -1,12 +1,13 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { getApiErrorMessage } from '../api/client'
 import { LogIn, Mail, Lock, TrendingUp } from 'lucide-react'
 import toast from 'react-hot-toast'
 import './AuthPages.css'
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('')
+  const [identifier, setIdentifier] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const { login } = useAuth()
@@ -16,11 +17,11 @@ export default function LoginPage() {
     e.preventDefault()
     setLoading(true)
     try {
-      await login(email, password)
+      await login(identifier, password)
       toast.success('Welcome back!')
       navigate('/')
     } catch (err) {
-      const msg = err.response?.data?.detail || 'Login failed'
+      const msg = getApiErrorMessage(err, 'Login failed')
       toast.error(msg)
     } finally {
       setLoading(false)
@@ -67,16 +68,16 @@ export default function LoginPage() {
 
             <form onSubmit={handleSubmit} className="auth-form" id="login-form">
               <div className="input-group">
-                <label htmlFor="login-email">Email address</label>
+                <label htmlFor="login-identifier">Email or User ID</label>
                 <div className="input-with-icon">
                   <Mail size={16} className="input-icon" />
                   <input
-                    id="login-email"
+                    id="login-identifier"
                     className="input-field"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="you@example.com"
+                    type="text"
+                    value={identifier}
+                    onChange={(e) => setIdentifier(e.target.value)}
+                    placeholder="you@example.com or user ID"
                     required
                     autoFocus
                   />

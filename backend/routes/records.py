@@ -23,7 +23,7 @@ router = APIRouter(prefix="/records", tags=["Records"])
 def create_financial_record(
     payload: RecordCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_roles(UserRole.ADMIN)),
+    current_user: User = Depends(require_roles(UserRole.ADMIN, UserRole.VIEWER)),
 ):
     return create_record(db=db, payload=payload, user_id=current_user.id)
 
@@ -72,7 +72,7 @@ def update_financial_record(
 def delete_financial_record(
     record_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_roles(UserRole.ADMIN)),
+    current_user: User = Depends(require_roles(UserRole.ADMIN, UserRole.VIEWER)),
 ):
     record = get_record_or_none(db=db, record_id=record_id, current_user=current_user)
     if not record:
